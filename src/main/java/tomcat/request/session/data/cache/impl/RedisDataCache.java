@@ -109,10 +109,11 @@ public class RedisDataCache implements DataCache {
 
 		int timeout = Integer.parseInt(properties.getProperty(RedisConstants.TIMEOUT, String.valueOf(Protocol.DEFAULT_TIMEOUT)));
 		timeout = (timeout < Protocol.DEFAULT_TIMEOUT) ? Protocol.DEFAULT_TIMEOUT : timeout;
-
-		if (clusterEnabled) {
+		if (clusterEnabled && password == null) {
 			dataCache = new RedisClusterCacheUtil((Set<HostAndPort>) nodes, timeout, getPoolConfig(properties));
-		} else {
+		}if(clusterEnabled && password != null) {
+			dataCache = new RedisClusterCacheUtil((Set<HostAndPort>) nodes, Protocol.DEFAULT_TIMEOUT, Protocol.DEFAULT_TIMEOUT, Protocol.DEFAULT_TIMEOUT, password, getPoolConfig(properties));
+		}else {
 			dataCache = new RedisCacheUtil(((List<String>) nodes).get(0),
 					Integer.parseInt(((List<String>) nodes).get(1)), password, database, timeout, getPoolConfig(properties));
 		}
@@ -366,6 +367,12 @@ public class RedisDataCache implements DataCache {
 
 		public RedisClusterCacheUtil(Set<HostAndPort> nodes, int timeout, JedisPoolConfig poolConfig) {
 			cluster = new JedisCluster(nodes, timeout, poolConfig);
+		}
+
+		//modify by jiahao
+		public RedisClusterCacheUtil(Set<HostAndPort> nodes, int connectionTimeout, int soTimeout,
+									 int maxAttempts, String password, JedisPoolConfig poolConfig) {
+			cluster = new JedisCluster(nodes, connectionTimeout, soTimeout, maxAttempts, password, poolConfig);
 		}
 
 		/** {@inheritDoc} */
